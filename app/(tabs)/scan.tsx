@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect } from "@react-navigation/native";
 import { Camera, CameraView } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
@@ -33,14 +33,14 @@ export default function ScanScreen() {
         // Saat screen unfocus (misal pindah tab), bisa set scanned true biar tidak scan di background
         setScanned(true);
       };
-    }, [])
+    }, []),
   );
   const handleBarCodeScanned = ({ data }: { data: string }) => {
     setScanned(true);
 
     // Langsung navigasi ke halaman hasil scan dengan parameter code
     router.push({
-      pathname: '/hasil_scan',
+      pathname: "/hasil_scan",
       params: { code: data },
     });
   };
@@ -94,18 +94,10 @@ export default function ScanScreen() {
 
       {/* SCAN AREA */}
       <View style={styles.scanArea}>
-        {/* <View style={styles.scanBox} /> */}
         <View style={styles.scanFrame}>
-          {/* TOP LEFT */}
           <View style={[styles.corner, styles.topLeft]} />
-
-          {/* TOP RIGHT */}
           <View style={[styles.corner, styles.topRight]} />
-
-          {/* BOTTOM LEFT */}
           <View style={[styles.corner, styles.bottomLeft]} />
-
-          {/* BOTTOM RIGHT */}
           <View style={[styles.corner, styles.bottomRight]} />
         </View>
         <Text style={styles.instruction}>Arahkan kamera ke barcode!</Text>
@@ -258,5 +250,4 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#fff",
   },
-
 });

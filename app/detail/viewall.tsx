@@ -1,15 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, router } from 'expo-router';
+import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { 
-  ActivityIndicator, 
-  FlatList, 
-  Image, 
-  StyleSheet, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  View, 
+import {
+  ActivityIndicator,
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 import { apiFetch } from '@/utils/api';
@@ -30,6 +30,7 @@ export default function ViewAllScreen() {
   const [data, setData] = useState<TravelDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const { filterStatus } = useLocalSearchParams(); 
 
   useEffect(() => {
     fetchAll();
@@ -37,12 +38,22 @@ export default function ViewAllScreen() {
 
   const fetchAll = async () => {
     try {
+      setLoading(true); 
       const res = await apiFetch('/travel-documents');
-      if (res?.data) {
-        setData(res.data);
+      if (res?.data && Array.isArray(res.data)) {
+        // Sort dari tanggal terbaru ke terlama
+        const sortedData = [...res.data].sort((a, b) => {
+          return new Date(b.date_no_travel_document).getTime() - 
+                new Date(a.date_no_travel_document).getTime();
+        });
+
+        setData(sortedData);
+      } else {
+        setData([]);
       }
     } catch (e) {
-      console.log(e);
+      console.log('Error fetching data:', e);
+      setData([]);
     } finally {
       setLoading(false);
     }
@@ -55,27 +66,74 @@ export default function ViewAllScreen() {
       year: 'numeric',
     });
 
-  const getStatusColor = (status: string) =>
-    status === 'Belum terkirim' ? '#FFA500' : '#008000';
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Belum terkirim':
+        return '#FFEDD5'; 
+      case 'Sedang dikirim':
+        return '#48ABF7';
+      case 'Terkirim':
+        return '#DCFCE7'; 
+      default:
+        return '#E5E7EB'; 
+    }
+  };
 
-  const getStatusIcon = (status: string) =>
-    status === 'Belum terkirim'
-      ? require('@/assets/icons/pending.png')
-      : require('@/assets/icons/sent.png');
+  const getStatusTextColor = (status: string) => {
+    switch (status) {
+      case 'Belum terkirim':
+        return '#C4541F'; 
+      case 'Sedang dikirim':
+        return '#FFFFFF'; 
+      case 'Terkirim':
+        return '#158079'; 
+      default:
+        return '#4B5563'; 
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'Belum terkirim':
+        return require('@/assets/icons/pending.png');
+      case 'Sedang dikirim':
+        return require('@/assets/icons/sedang-dikirim.png'); 
+      case 'Terkirim':
+        return require('@/assets/icons/sent.png');
+      default:
+        return require('@/assets/icons/pending.png');
+    }
+  };
 
   // FILTER DATA BERDASARKAN SEARCH
   const filteredData = useMemo(() => {
-    if (!search.trim()) return data;
+    let result = data;
 
-    const keyword = search.toLowerCase();
+    // Filter berdasarkan status jika ada
+    if (filterStatus && typeof filterStatus === 'string') {
+      result = result.filter(item => item.status === filterStatus);
+    }
 
-    return data.filter(
-      (item) =>
-        item.project.toLowerCase().includes(keyword) ||
-        item.no_travel_document.toLowerCase().includes(keyword)
-    );
-  }, [search, data]);
+    // Filter berdasarkan pencarian
+    if (search.trim()) {
+      const keyword = search.toLowerCase();
+      result = result.filter(
+        (item) =>
+          item.project.toLowerCase().includes(keyword) ||
+          item.no_travel_document.toLowerCase().includes(keyword)
+      );
+    }
 
+    return result;
+  }, [data, filterStatus, search]);
+
+  const getTitle = () => {
+    if (filterStatus === 'Belum terkirim') return 'Belum Terkirim';
+    if (filterStatus === 'Sedang dikirim') return 'Sedang Dikirim';
+    if (filterStatus === 'Terkirim') return 'Terkirim';
+    return 'Daftar Pengiriman';
+  };
+  
   const renderItem = ({ item }: { item: TravelDocument }) => (
     <TouchableOpacity
       style={styles.recentCard}
@@ -115,7 +173,8 @@ export default function ViewAllScreen() {
 
       <View style={styles.rightContent}>
         <View style={[styles.statusBadge,{ backgroundColor: getStatusColor(item.status) },]}>
-          <Text style={styles.statusText}>
+          {/* <Text style={styles.statusText}> */}
+          <Text style={[ styles.statusText, { color: getStatusTextColor(item.status) }  ]} >
             {item.status}
           </Text>
         </View>
@@ -129,19 +188,14 @@ export default function ViewAllScreen() {
       <Stack.Screen options={{ headerShown: false }} />
 
       <View style={styles.container}>
-        {/* HEADER */}
         <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backButton}
-          >
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color="#000" />
           </TouchableOpacity>
-
-          <Text style={styles.title}>Daftar Pengiriman</Text>
+          <Text style={styles.title}>{getTitle()}</Text>
         </View>
 
-        {/* SEARCH */}
+        {/* Search tetap ada */}
         <View style={styles.searchContainer}>
           <Ionicons name="search" size={20} color="#999" />
           <TextInput
@@ -155,6 +209,10 @@ export default function ViewAllScreen() {
 
         {loading ? (
           <ActivityIndicator size="large" />
+        ) : filteredData.length === 0 ? (
+          <Text style={styles.emptyText}>
+            {search.trim() ? 'Data tidak ditemukan' : 'Tidak ada data untuk status ini'}
+          </Text>
         ) : (
           <FlatList
             data={filteredData}
@@ -162,11 +220,6 @@ export default function ViewAllScreen() {
             renderItem={renderItem}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 20 }}
-            ListEmptyComponent={
-              <Text style={styles.emptyText}>
-                Data tidak ditemukan
-              </Text>
-            }
           />
         )}
       </View>
@@ -177,9 +230,9 @@ export default function ViewAllScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9f9f9',
-    paddingHorizontal: 16,
+    padding: 16,
     paddingTop: 30,
+    backgroundColor: '#f9f9f9',
   },
   /* HEADER */
   header: {
@@ -228,7 +281,13 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
   },
   recentIconWrapper: {
     width: 45,
@@ -242,6 +301,7 @@ const styles = StyleSheet.create({
   recentStatusIcon: {
     width: 22,
     height: 22,
+    resizeMode: 'contain',
   },
   middleContent: {
     flex: 1,
@@ -269,13 +329,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
-    minWidth: 90,
+    minWidth: 95,
     marginLeft: 8,
     alignItems: 'center',
   },
   statusText: {
-    color: '#fff',
+    // color: '#fff',
     fontSize: 12,
     fontWeight: 'bold',
+    textAlign: 'center',
   },
 });

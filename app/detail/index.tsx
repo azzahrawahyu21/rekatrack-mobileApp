@@ -1,11 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
-import { 
-  FlatList, 
-  StyleSheet, 
-  Text, 
-  TouchableOpacity, 
-  View 
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 type Unit = {
@@ -73,10 +73,33 @@ export default function DetailScreen() {
     });
   };
 
-  const getStatusColor = (status: string) =>
-    status === 'Belum terkirim' ? '#FFA500' : '#008000';
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Belum terkirim':
+        return '#FFEDD5';     // background orange soft
+      case 'Sedang dikirim':
+        return '#48ABF7';     // background biru
+      case 'Terkirim':
+        return '#DCFCE7';     // background hijau soft
+      default:
+        return '#E5E7EB';     // fallback abu-abu
+    }
+  };
 
-const renderRecentItem = ({ item }: { item: TravelDocument }) => (
+  const getStatusTextColor = (status: string) => {
+    switch (status) {
+      case 'Belum terkirim':
+        return '#C4541F';     // teks orange tua
+      case 'Sedang dikirim':
+        return '#FFFFFF';     // teks putih
+      case 'Terkirim':
+        return '#158079';     // teks hijau tua
+      default:
+        return '#4B5563';
+    }
+  };
+
+  const renderRecentItem = ({ item }: { item: TravelDocument }) => (
   <>
     {/* CARD DETAIL SJN (ATAS) */}
     <View style={styles.detailCard}>
@@ -127,14 +150,70 @@ const renderRecentItem = ({ item }: { item: TravelDocument }) => (
       <View style={styles.grid}>
         <View style={styles.col}>
           <Text style={styles.label}>Status</Text>
-          <View
-            style={[
-              styles.statusBadge,
-              { backgroundColor: getStatusColor(item.status) },
-            ]}
-          >
-            <Text style={styles.statusText}>{item.status}</Text>
+          <View style={[ styles.statusBadge, { backgroundColor: getStatusColor(item.status) }, ]}>
+            <Text style={[ styles.statusText, { color: getStatusTextColor(item.status) } ]}>
+              {item.status}
+            </Text>
           </View>
+        </View>
+        <View style={styles.col}>
+          <Text style={styles.label}>Aksi</Text>
+
+          {/* BELUM TERKIRIM */}
+          {item.status === "Belum terkirim" && (
+            <TouchableOpacity
+              onPress={() => {
+                router.push({
+                  pathname: "/(tabs)/scan",
+                });
+              }}
+              style={[
+                styles.actionButton,
+                { backgroundColor: "#364981" },
+              ]}
+            >
+              <Text style={styles.actionButtonText}>
+                Mulai Pengiriman
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {/* SEDANG DIKIRIM */}
+          {item.status === "Sedang dikirim" && (
+            <TouchableOpacity
+              onPress={() => {
+                router.push({
+                  pathname: "/pengiriman/selesai",
+                });
+              }}
+              style={[
+                styles.actionButton,
+                { backgroundColor: "#364981" },
+              ]}
+            >
+              <Text style={styles.actionButtonText}>
+                Selesaikan Pengiriman
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {/* TERKIRIM → tampilkan Bukti Pengiriman */}
+          {/* {item.status === "Terkirim" && (
+            <TouchableOpacity
+              onPress={() => {
+                router.push({
+                  pathname: "/pengiriman/bukti", // halaman baru
+                  params: {
+                    id: item.id.toString(),
+                    no: item.no_travel_document,
+                  },
+                });
+              }}
+              style={[styles.actionButton, { backgroundColor: "#364981" }]} // warna hijau sukses
+            >
+              <Text style={styles.actionButtonText}>Bukti Pengiriman</Text>
+            </TouchableOpacity>
+          )} */}
         </View>
       </View>
     </View>
@@ -325,17 +404,16 @@ const styles = StyleSheet.create({
   },
   statusBadge: { 
     alignSelf: 'flex-start', 
-    paddingHorizontal: 10, 
-    paddingVertical: 3, 
-    borderRadius: 4, 
+    paddingHorizontal: 12, 
+    paddingVertical: 6, 
+    borderRadius: 8, 
     alignItems: 'center', 
-    marginBottom: 8, 
-    marginTop: 5 
+    marginTop: 8,
+    marginBottom: 4,
   },
   statusText: { 
-    color: '#fff', 
-    fontSize: 12, 
-    fontWeight: 'bold' 
+    fontSize: 13, 
+    fontWeight: 'bold',
   },
   sectionTitle: {
     fontSize: 16,
@@ -417,7 +495,7 @@ const styles = StyleSheet.create({
     marginVertical: 20 
   },
   sectionTitleOuter: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     color: '#111827',
     marginTop: 2,
@@ -444,7 +522,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   itemSeparateIndex: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     color: '#444',
     marginRight: 12,
@@ -454,7 +532,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   itemSeparateName: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '600',
     color: '#111827',
   },
@@ -481,5 +559,19 @@ const styles = StyleSheet.create({
   itemQtyCol: {
     flex: 1,
     alignItems: 'center',
+  },
+  actionButton: { 
+    alignSelf: 'flex-start', 
+    paddingHorizontal: 12, 
+    paddingVertical: 6, 
+    borderRadius: 8, 
+    alignItems: 'center', 
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  actionButtonText: { 
+    fontSize: 13, 
+    fontWeight: 'bold',
+    color: '#FFFFFF',
   },
 });

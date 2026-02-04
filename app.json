@@ -9,8 +9,14 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "bundleIdentifier": "com.reka.rekatrackmobile",
-      "supportsTablet": true
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Aplikasi membutuhkan akses lokasi untuk tracking pengiriman",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Aplikasi membutuhkan akses lokasi di background untuk tracking pengiriman",
+        "UIBackgroundModes": [
+          "location",
+          "fetch"
+        ]
+      }
     },
     "android": {
       "package": "com.reka.rekatrackmobile",
@@ -21,7 +27,18 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION"
+      ]
     },
     "web": {
       "output": "static",
@@ -40,19 +57,29 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Izinkan aplikasi melacak lokasi Anda kapan saja untuk keperluan tracking pengiriman.",
+          "locationAlwaysPermission": "Izinkan aplikasi melacak lokasi di background.",
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
     },
     "extra": {
+      // "API_URL": "http://192.168.1.67:8000/api",
+      "API_URL": "https://treponemal-eryn-vanillic.ngrok-free.dev/api",
       "router": {},
       "eas": {
-        "projectId": "200d2d34-f72d-48a7-a723-d117f19be0cc"
+        "projectId": "ad893d6e-6727-4fda-95a2-96410826be77"
       }
     },
-    "owner": "fajarbudhi17",
     "runtimeVersion": {
       "policy": "appVersion"
     },
